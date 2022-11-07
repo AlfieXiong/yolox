@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import torch.nn as nn
 
 
 def gen_randint(end_right, discard, nums):
@@ -16,6 +17,8 @@ def normalize(a, axis=-1):
 
 
 def featureprocess(f_cur, f_ref):
+    f_nums = f_ref.shape[0]
+    dim_f = f_cur.shpae[1]
     f1 = f_cur.clone()
     f2 = f_ref.clone()
     a = normalize(f1)
@@ -23,8 +26,14 @@ def featureprocess(f_cur, f_ref):
     for i in range(cossim.shape[0]):
         b = normalize(f2[i])
         cossim[i] = 1 - torch.mm(a, b.permute(1, 0))
-    maxidx = torch.argmax(cossim, axis=2)
+    maxidx = torch.argmax(cossim, dim=2)
     for k in range(f1.shape[0]):
-        sim = torch.gather(cossim, 2, )
-
-    print('test')
+        cossim_temp = cossim[:, k, :].squeeze()
+        idx_temp = maxidx[:, k].reshape(f_nums, 1)
+        sim = torch.gather(cossim_temp, 1, idx_temp)
+        sim = torch.softmax(sim, dim=0)
+        sum_f = torch.zeros(dim_f)
+        for j in range(f_nums):
+            sum_f = (1 / sim.sum()) * sim[j] * f2[j, maxidx[j, k]]
+        f1[k] = 0.5 * f1[k] + 0.5 * sum_f
+    return f1

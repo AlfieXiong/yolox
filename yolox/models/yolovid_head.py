@@ -31,7 +31,7 @@ class YOLOVIDHEAD(nn.Module):
             depthwise (bool): whether apply depthwise conv in conv branch. Defalut value: False.
         """
         super().__init__()
-        self.isVid = False
+        self.isVid = True
 
         self.n_anchors = 1
         self.num_classes = num_classes
@@ -202,8 +202,9 @@ class YOLOVIDHEAD(nn.Module):
                 cls_output = self.cls_preds[k](cls_feat)
 
                 reg_feat = reg_conv(reg_x)
-                reg_output = self.reg_preds[k](reg_feat)
+                #reg_output = self.reg_preds[k](reg_feat)
                 obj_output = self.obj_preds[k](reg_feat)
+                reg_output = reg_output_s
 
             else:
                 cls_x = x
