@@ -17,8 +17,9 @@ def normalize(a, axis=-1):
 
 
 def featureprocess(f_cur, f_ref):
+    weight = 0.2
     f_nums = f_ref.shape[0]
-    dim_f = f_cur.shpae[1]
+    dim_f = f_cur.shape[1]
     f1 = f_cur.clone()
     f2 = f_ref.clone()
     a = normalize(f1)
@@ -35,5 +36,5 @@ def featureprocess(f_cur, f_ref):
         sum_f = torch.zeros(dim_f)
         for j in range(f_nums):
             sum_f = (1 / sim.sum()) * sim[j] * f2[j, maxidx[j, k]]
-        f1[k] = 0.5 * f1[k] + 0.5 * sum_f
+        f1[k] = weight * f1[k] + (1 - weight) * sum_f
     return f1

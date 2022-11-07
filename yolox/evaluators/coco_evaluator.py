@@ -288,7 +288,8 @@ class COCOEvaluator:
                 json.dump(data_dict, open(tmp, "w"))
                 cocoDt = cocoGt.loadRes(tmp)
             try:
-                from yolox.layers import COCOeval_opt as COCOeval
+                from pycocotools.cocoeval import COCOeval
+                #from yolox.layers import COCOeval_opt as COCOeval
             except ImportError:
                 from pycocotools.cocoeval import COCOeval
 

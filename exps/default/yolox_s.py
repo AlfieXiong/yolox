@@ -22,3 +22,4 @@ class Exp(MyExpvid):
         # name of annotation file for testing
         self.test_ann = "val.json"
         self.max_epoch = 100
+        self.eval_interval = 1
