@@ -18,7 +18,7 @@ def normalize(a, axis=-1):
 
 
 def featureprocess(f_cur, f_ref):
-    weight = 0.9
+    weight = 0.8
     f_nums = f_ref.shape[0]
     dim_f = f_cur.shape[1]
     f1 = f_cur.clone()
@@ -29,9 +29,9 @@ def featureprocess(f_cur, f_ref):
             cossim[i, j] = F.cosine_similarity(f1[j], f2[i])
     maxidx = torch.argmax(cossim, dim=2)
     for k in range(f1.shape[0]):
-        cossim_temp = cossim[:, k, :].squeeze()
+        cossim_temp = cossim[:, k, :].squeeze(1)
         idx_temp = maxidx[:, k].reshape(f_nums, 1)
-        sim = torch.gather(cossim_temp, 1, idx_temp)
+        sim = torch.gather(cossim_temp, dim=1, index=idx_temp)
         sim = torch.softmax(sim, dim=0)
         sum_f = torch.zeros(dim_f)
         for j in range(f_nums):
