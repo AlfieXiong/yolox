@@ -130,7 +130,7 @@ if __name__ == "__main__":
     num_gpu = get_num_devices() if args.devices is None else args.devices
     assert num_gpu <= get_num_devices()
     import os
-    #os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     dist_url = "auto" if args.dist_url is None else args.dist_url
     launch(
         main,

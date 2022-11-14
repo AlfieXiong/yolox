@@ -21,9 +21,11 @@ def featureprocess(f_cur, f_ref):
     weight = 0.8
     f_nums = f_ref.shape[0]
     dim_f = f_cur.shape[1]
-    f1 = f_cur.clone()
-    f2 = f_ref.clone()
+    f1 = f_cur
+    f2 = f_ref
+    #直接计算cossim
     cossim = torch.Tensor(f2.shape[0], f1.shape[0], f2.shape[1])
+    cossim.requires_grad_(True)
     for i in range(cossim.shape[0]):
         for j in range(cossim.shape[1]):
             cossim[i, j] = F.cosine_similarity(f1[j], f2[i])
@@ -33,7 +35,9 @@ def featureprocess(f_cur, f_ref):
         idx_temp = maxidx[:, k].reshape(f_nums, 1)
         sim = torch.gather(cossim_temp, dim=1, index=idx_temp)
         sim = torch.softmax(sim, dim=0)
+        #直接计算
         sum_f = torch.zeros(dim_f)
+        sum_f.requires_grad_(True)
         for j in range(f_nums):
             sum_f = sim[j] * f2[j, maxidx[j, k]]
         f1[k] = weight * f1[k] + (1 - weight) * sum_f

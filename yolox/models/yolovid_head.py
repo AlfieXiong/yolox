@@ -179,9 +179,9 @@ class YOLOVIDHEAD(nn.Module):
                 if bs > 1:
                     score = torch.mul(cls_output_s.sigmoid(), obj_output_s.sigmoid()).reshape(bs, 1,
                                                                                               gridnum * gridnum).squeeze()
-                    # feat_reference_frames =
                     _, index = torch.topk(score, k_regions)
                     feat_topk = torch.Tensor(bs, k_regions, length_f)
+                    feat_topk.requires_grad_(True)
                     for i in range(bs):
                         for j in range(k_regions):
                             a = torch.floor(index[i, j] / gridnum).long()
@@ -193,6 +193,7 @@ class YOLOVIDHEAD(nn.Module):
                         f_ref = feat_topk[f_ref_idx]
                         feat_topk[i] = featureprocess(f_current, f_ref)
 
+
                 # 特征匹配和特征聚合，训练时冻结辅助的detector
                 # x需要经过特征匹配和特征聚合
                 cls_x = x
@@ -202,9 +203,10 @@ class YOLOVIDHEAD(nn.Module):
                 cls_output = self.cls_preds[k](cls_feat)
 
                 reg_feat = reg_conv(reg_x)
-                #reg_output = self.reg_preds[k](reg_feat)
-                obj_output = self.obj_preds[k](reg_feat)
+                # reg_output = self.reg_preds[k](reg_feat)
                 reg_output = reg_output_s
+                obj_output = self.obj_preds[k](reg_feat)
+
 
             else:
                 cls_x = x
