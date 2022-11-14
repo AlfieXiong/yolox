@@ -1,12 +1,18 @@
 import torch
-
+import torch.nn.functional as F
 import numpy
 import math
+from MyUtils.utils import featureprocess
 
 a = torch.arange(0, 24).view(2, 3, 4)
-b = torch.Tensor(1, 3, 2)
-b = a[1, :, 0:2]
+
+b = torch.arange(0, 12).view(3, 4)
+
+a = a.type(torch.float32)
+b = b.type(torch.float32).unsqueeze(0)
+
+c = F.cosine_similarity(b.unsqueeze(2), a.unsqueeze(1),dim=3)
+
+print(a.shape)
 print(b.shape)
-b[0, 1] = 100
-print(a)
-print(b)
+print(c.shape)

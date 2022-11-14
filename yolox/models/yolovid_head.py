@@ -177,23 +177,27 @@ class YOLOVIDHEAD(nn.Module):
                 obj_output_s = self.obj_preds[k](reg_feat_s)
 
                 if bs > 1:
+                    regions_num = gridnum * gridnum
                     score = torch.mul(cls_output_s.sigmoid(), obj_output_s.sigmoid()).reshape(bs, 1,
-                                                                                              gridnum * gridnum).squeeze()
+                                                                                              regions_num).squeeze()
+
                     _, index = torch.topk(score, k_regions)
-                    feat_topk = torch.Tensor(bs, k_regions, length_f)
-                    feat_topk.requires_grad_(True)
-                    for i in range(bs):
-                        for j in range(k_regions):
-                            a = torch.floor(index[i, j] / gridnum).long()
-                            b = index[i, j] % gridnum
-                            feat_topk[i, j] = x[0, :, a, b]
+                    x = x.permute(0, 2, 3, 1)
+                    x = x.reshape(bs * regions_num, length_f)
+                    index = index.reshape(bs * k_regions)
+                    for i in range(index.shape[0]):
+                        increment = int(i / k_regions) * regions_num
+                        index[i] = index[i] + increment
+                    feat_topk = torch.index_select(x, 0, index).reshape(bs, k_regions, length_f)
+
                     for i in range(bs):
                         f_ref_idx = gen_randint(bs, i, nums_frames)
                         f_current = feat_topk[i]
                         f_ref = feat_topk[f_ref_idx]
                         feat_topk[i] = featureprocess(f_current, f_ref)
 
-
+                    x = x.reshape(bs, gridnum, gridnum, length_f)
+                    x = x.permute(0, 3, 1, 2)
                 # 特征匹配和特征聚合，训练时冻结辅助的detector
                 # x需要经过特征匹配和特征聚合
                 cls_x = x

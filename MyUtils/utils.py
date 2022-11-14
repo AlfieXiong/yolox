@@ -20,25 +20,28 @@ def normalize(a, axis=-1):
 def featureprocess(f_cur, f_ref):
     weight = 0.8
     f_nums = f_ref.shape[0]
+    object_nums = f_ref.shape[1]
     dim_f = f_cur.shape[1]
-    f1 = f_cur
+    f1 = f_cur.unsqueeze(0)
     f2 = f_ref
-    #直接计算cossim
-    cossim = torch.Tensor(f2.shape[0], f1.shape[0], f2.shape[1])
-    cossim.requires_grad_(True)
-    for i in range(cossim.shape[0]):
-        for j in range(cossim.shape[1]):
-            cossim[i, j] = F.cosine_similarity(f1[j], f2[i])
+
+    cossim = torch.cosine_similarity(f1.unsqueeze(2), f2.unsqueeze(1), dim=3)
+
     maxidx = torch.argmax(cossim, dim=2)
-    for k in range(f1.shape[0]):
-        cossim_temp = cossim[:, k, :].squeeze(1)
-        idx_temp = maxidx[:, k].reshape(f_nums, 1)
-        sim = torch.gather(cossim_temp, dim=1, index=idx_temp)
-        sim = torch.softmax(sim, dim=0)
-        #直接计算
-        sum_f = torch.zeros(dim_f)
-        sum_f.requires_grad_(True)
-        for j in range(f_nums):
-            sum_f = sim[j] * f2[j, maxidx[j, k]]
-        f1[k] = weight * f1[k] + (1 - weight) * sum_f
+
+    cos = torch.gather(cossim, dim=2, index=maxidx.unsqueeze(2))
+    cos_soft = torch.softmax(cos, dim=0).squeeze(2)
+    maxidx = maxidx.reshape(f_nums * object_nums)
+    for i in range(maxidx.shape[0]):
+        increment = int(i / object_nums) * object_nums
+        maxidx[i] = maxidx[i] + increment
+    f_temp = f2.reshape(f_nums * object_nums, dim_f)
+    f_cos = torch.index_select(f_temp, 0, maxidx)
+    f_cos = f_cos.reshape(f_nums * object_nums, dim_f)
+    cos_soft = cos_soft.reshape(-1, 1)
+    f_aug = (f_cos * cos_soft.reshape(-1, 1)).reshape(f_nums, object_nums, dim_f)
+    f_aug = f_aug.sum(dim=0, keepdim=False)
+
+    f1 = weight * f1 + (1 - weight) * f_aug
+
     return f1
