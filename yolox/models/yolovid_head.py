@@ -182,6 +182,7 @@ class YOLOVIDHEAD(nn.Module):
                                                                                               regions_num).squeeze()
 
                     _, index = torch.topk(score, k_regions)
+
                     x = x.permute(0, 2, 3, 1)
                     x = x.reshape(bs * regions_num, length_f)
                     index = index.reshape(bs * k_regions)
@@ -194,12 +195,12 @@ class YOLOVIDHEAD(nn.Module):
                         f_ref_idx = gen_randint(bs, i, nums_frames)
                         f_current = feat_topk[i]
                         f_ref = feat_topk[f_ref_idx]
-                        feat_topk[i] = featureprocess(f_current, f_ref)
+                        featureprocess(f_current, f_ref)
+
 
                     x = x.reshape(bs, gridnum, gridnum, length_f)
                     x = x.permute(0, 3, 1, 2)
-                # 特征匹配和特征聚合，训练时冻结辅助的detector
-                # x需要经过特征匹配和特征聚合
+
                 cls_x = x
                 reg_x = x
 
