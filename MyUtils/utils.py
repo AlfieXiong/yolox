@@ -18,7 +18,7 @@ def normalize(a, axis=-1):
 
 
 def featureprocess(f_cur, f_ref):
-    weight = 0.8
+    weight = 0.5
     f_nums = f_ref.shape[0]
     object_nums = f_ref.shape[1]
     dim_f = f_cur.shape[1]
@@ -44,4 +44,5 @@ def featureprocess(f_cur, f_ref):
 
     f1 = weight * f1 + (1 - weight) * f_aug
 
-    return f1
+    f_cur = f1.squeeze(0)
+    return f_cur

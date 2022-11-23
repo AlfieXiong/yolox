@@ -159,6 +159,7 @@ class YOLOVIDHEAD(nn.Module):
                 zip(self.cls_convs, self.reg_convs, self.cls_convs_supple, self.reg_convs_supple, self.strides, xin)
         ):
             x = self.stems[k](x)
+
             if self.isVid:
                 # 辅助detector的输出
                 bs = x.shape[0]
@@ -176,6 +177,7 @@ class YOLOVIDHEAD(nn.Module):
                 reg_output_s = self.reg_preds[k](reg_feat_s)
                 obj_output_s = self.obj_preds[k](reg_feat_s)
 
+
                 if bs > 1:
                     regions_num = gridnum * gridnum
                     score = torch.mul(cls_output_s.sigmoid(), obj_output_s.sigmoid()).reshape(bs, 1,
@@ -186,18 +188,50 @@ class YOLOVIDHEAD(nn.Module):
                     x = x.permute(0, 2, 3, 1)
                     x = x.reshape(bs * regions_num, length_f)
                     index = index.reshape(bs * k_regions)
+                    x_clone = x.clone()
                     for i in range(index.shape[0]):
                         increment = int(i / k_regions) * regions_num
                         index[i] = index[i] + increment
-                    feat_topk = torch.index_select(x, 0, index).reshape(bs, k_regions, length_f)
+                    # feat_topk = torch.index_select(x, 0, index).reshape(bs, k_regions, length_f)
+
+                    feat_topk = x[index, :]
+                    feat_topk = feat_topk.detach()
+                    feat_topk = feat_topk.reshape(bs, k_regions, length_f)
+                    feat_topkclone = feat_topk.clone()
 
                     for i in range(bs):
                         f_ref_idx = gen_randint(bs, i, nums_frames)
-                        f_current = feat_topk[i]
                         f_ref = feat_topk[f_ref_idx]
-                        featureprocess(f_current, f_ref)
 
+                        weight = 0.98
+                        f_nums = f_ref.shape[0]
+                        object_nums = f_ref.shape[1]
+                        dim_f = f_ref.shape[2]
 
+                        f2 = f_ref
+                        cossim = torch.cosine_similarity(feat_topk[i].unsqueeze(0).unsqueeze(2), f2.unsqueeze(1), dim=3)
+
+                        maxidx = torch.argmax(cossim, dim=2)
+
+                        cos = torch.gather(cossim, dim=2, index=maxidx.unsqueeze(2))
+                        cos_soft = torch.softmax(cos, dim=0).squeeze(2)
+                        maxidx = maxidx.reshape(f_nums * object_nums)
+                        for i_maxidx in range(maxidx.shape[0]):
+                            increment = int(i_maxidx / object_nums) * object_nums
+                            maxidx[i_maxidx] = maxidx[i_maxidx] + increment
+                        f_temp = f2.reshape(f_nums * object_nums, dim_f)
+                        f_cos = torch.index_select(f_temp, 0, maxidx)
+                        f_cos = f_cos.reshape(f_nums * object_nums, dim_f)
+                        cos_soft = cos_soft.reshape(-1, 1)
+                        f_aug = (f_cos * cos_soft.reshape(-1, 1)).reshape(f_nums, object_nums, dim_f)
+                        f_aug = f_aug.sum(dim=0, keepdim=False)
+
+                        feat_topk[i] = weight * feat_topk[i] + (1 - weight) * f_aug
+
+                    diff = (feat_topk - feat_topkclone).sum()
+                    feat_topk = feat_topk.reshape(bs * k_regions, length_f)
+                    x[index] = feat_topk
+                    diff_x = (x_clone-x).sum()
                     x = x.reshape(bs, gridnum, gridnum, length_f)
                     x = x.permute(0, 3, 1, 2)
 

@@ -4,15 +4,11 @@ import numpy
 import math
 from MyUtils.utils import featureprocess
 
-a = torch.arange(0, 24).view(2, 3, 4)
+a = torch.arange(0, 24).view(2, 3, 4).type(torch.float32)
 
-b = torch.arange(0, 12).view(3, 4)
+index = torch.arange(1)
+feat_topk = torch.index_select(a, 0, index)
 
-a = a.type(torch.float32)
-b = b.type(torch.float32).unsqueeze(0)
-
-c = F.cosine_similarity(b.unsqueeze(2), a.unsqueeze(1),dim=3)
-
-print(a.shape)
-print(b.shape)
-print(c.shape)
+print(feat_topk)
+feat_topk[0,0,0] =100
+print(a)
