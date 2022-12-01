@@ -31,7 +31,7 @@ class YOLOVIDHEAD(nn.Module):
             depthwise (bool): whether apply depthwise conv in conv branch. Defalut value: False.
         """
         super().__init__()
-        self.isVid = True
+        self.isVid = False
 
         self.n_anchors = 1
         self.num_classes = num_classes

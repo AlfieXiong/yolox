@@ -4,9 +4,9 @@
 
 import os
 
-from yolox.exp import Exp as MyExp
-from yolox.exp import Expvid as MyExpvid
 
+from yolox.exp import Expvid as MyExpvid
+#from yolox.exp import Exp as MyExpvid
 
 class Exp(MyExpvid):
     def __init__(self):
@@ -21,5 +21,5 @@ class Exp(MyExpvid):
         self.val_ann = "val.json"
         # name of annotation file for testing
         self.test_ann = "val.json"
-        self.max_epoch = 200
-        self.eval_interval = 1
+        self.max_epoch = 100
+        # self.eval_interval = 1

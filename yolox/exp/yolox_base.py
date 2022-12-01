@@ -118,7 +118,7 @@ class Exp(BaseExp):
 
         if getattr(self, "model", None) is None:
             in_channels = [256, 512, 1024]
-            backbone = YOLOPAFPN0(self.depth, self.width, in_channels=in_channels, act=self.act)
+            backbone = YOLOPAFPN(self.depth, self.width, in_channels=in_channels, act=self.act)
 
             in_channels = [256,512,1024]
             in_stride = [8,16,32]
